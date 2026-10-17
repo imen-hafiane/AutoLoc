@@ -1,12 +1,11 @@
 package tn.esprit.autoloc.service;
 
-import jakarta.persistence.EntityNotFoundException;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import tn.esprit.autoloc.domain.Contrat;
+import tn.esprit.autoloc.exception.ResourceNotFoundException;
 import tn.esprit.autoloc.repository.IContratRepository;
-
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -15,41 +14,47 @@ public class ContratServiceImpl implements IContratService {
     private final IContratRepository contratRepository;
 
     @Override
-    public Contrat addContrat(Contrat contrat) {
-        lierPaiements(contrat);
+    public Contrat create(Contrat contrat) {
+        if (contrat.getIdContrat() != null) {
+            throw new IllegalArgumentException("Un nouvel objet Contrat ne doit pas avoir d'identifiant");
+        }
+        valider(contrat);
         return contratRepository.save(contrat);
     }
 
     @Override
-    public List<Contrat> retrieveAllContrats() {
+    public Contrat findById(Long id) {
+        return contratRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Contrat", id));
+    }
+
+    @Override
+    public List<Contrat> findAll() {
         return contratRepository.findAll();
     }
 
     @Override
-    public Contrat retrieveContrat(Long idContrat) {
-        return contratRepository.findById(idContrat)
-                .orElseThrow(() -> new EntityNotFoundException("Contrat introuvable : " + idContrat));
+    public Contrat update(Long id, Contrat contrat) {
+        Contrat existant = findById(id);
+        valider(contrat);
+        existant.setDateSignature(contrat.getDateSignature());
+        existant.setMontantTotal(contrat.getMontantTotal());
+        existant.setValide(contrat.isValide());
+        // ni l'identifiant ni la collection de paiements ne sont recopiés (orphanRemoval)
+        return contratRepository.save(existant);
     }
 
     @Override
-    public Contrat updateContrat(Contrat contrat) {
-        if (contrat.getIdContrat() == null || !contratRepository.existsById(contrat.getIdContrat())) {
-            throw new EntityNotFoundException("Contrat introuvable : " + contrat.getIdContrat());
+    public void deleteById(Long id) {
+        if (!contratRepository.existsById(id)) {
+            throw new ResourceNotFoundException("Contrat", id);
         }
-        lierPaiements(contrat);
-        return contratRepository.save(contrat);
+        contratRepository.deleteById(id);
     }
 
-    @Override
-    public void removeContrat(Long idContrat) {
-        // cascade = ALL : les paiements du contrat sont supprimés avec lui
-        contratRepository.deleteById(idContrat);
-    }
-
-    // Côté propriétaire (Paiement) : sans ce lien, la clé étrangère contrat_id_contrat resterait NULL
-    private void lierPaiements(Contrat contrat) {
-        if (contrat.getPaiements() != null) {
-            contrat.getPaiements().forEach(paiement -> paiement.setContrat(contrat));
+    private void valider(Contrat contrat) {
+        if (contrat.getMontantTotal() == null || contrat.getMontantTotal().signum() < 0) {
+            throw new IllegalArgumentException("Le montant total doit être positif ou nul");
         }
     }
 }
