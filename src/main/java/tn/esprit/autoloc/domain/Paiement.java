@@ -1,5 +1,6 @@
 package tn.esprit.autoloc.domain;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -40,6 +41,7 @@ public class Paiement {
     @Column(nullable = false, length = 20)
     private ModePaiement modePaiement;
 
+    @JsonBackReference("contrat-paiements")
     @ManyToOne(fetch = FetchType.LAZY)
     private Contrat contrat;
 }
