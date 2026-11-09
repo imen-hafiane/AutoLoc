@@ -3,44 +3,46 @@ package tn.esprit.autoloc.service;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import tn.esprit.autoloc.domain.Agence;
 import tn.esprit.autoloc.domain.Employe;
 import tn.esprit.autoloc.exception.ResourceNotFoundException;
+import tn.esprit.autoloc.mapper.EmployeMapper;
+import tn.esprit.autoloc.repository.IAgenceRepository;
 import tn.esprit.autoloc.repository.IEmployeRepository;
+import tn.esprit.autoloc.web.dto.EmployeRequestDTO;
+import tn.esprit.autoloc.web.dto.EmployeResponseDTO;
 
 @Service
 @RequiredArgsConstructor
 public class EmployeServiceImpl implements IEmployeService {
 
     private final IEmployeRepository employeRepository;
+    private final IAgenceRepository agenceRepository;
+    private final EmployeMapper employeMapper;
 
     @Override
-    public Employe create(Employe employe) {
-        if (employe.getIdEmploye() != null) {
-            throw new IllegalArgumentException("Un nouvel objet Employe ne doit pas avoir d'identifiant");
-        }
-        valider(employe);
-        return employeRepository.save(employe);
+    public EmployeResponseDTO create(EmployeRequestDTO dto) {
+        Employe employe = employeMapper.toEntity(dto);
+        employe.setAgence(getAgence(dto.getIdAgence()));
+        return employeMapper.toDto(employeRepository.save(employe));
     }
 
     @Override
-    public Employe findById(Long id) {
-        return employeRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Employe", id));
+    public EmployeResponseDTO findById(Long id) {
+        return employeMapper.toDto(getEmploye(id));
     }
 
     @Override
-    public List<Employe> findAll() {
-        return employeRepository.findAll();
+    public List<EmployeResponseDTO> findAll() {
+        return employeRepository.findAll().stream().map(employeMapper::toDto).toList();
     }
 
     @Override
-    public Employe update(Long id, Employe employe) {
-        Employe existant = findById(id);
-        valider(employe);
-        existant.setNom(employe.getNom());
-        existant.setPrenom(employe.getPrenom());
-        existant.setRole(employe.getRole());
-        return employeRepository.save(existant);
+    public EmployeResponseDTO update(Long id, EmployeRequestDTO dto) {
+        Employe existant = getEmploye(id);
+        employeMapper.updateEntity(existant, dto);
+        existant.setAgence(getAgence(dto.getIdAgence()));
+        return employeMapper.toDto(employeRepository.save(existant));
     }
 
     @Override
@@ -51,17 +53,13 @@ public class EmployeServiceImpl implements IEmployeService {
         employeRepository.deleteById(id);
     }
 
-    private void valider(Employe employe) {
-        exigerTexte(employe.getNom(), "nom");
-        exigerTexte(employe.getPrenom(), "prenom");
-        if (employe.getRole() == null) {
-            throw new IllegalArgumentException("Le champ role est obligatoire");
-        }
+    private Employe getEmploye(Long id) {
+        return employeRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Employe", id));
     }
 
-    private void exigerTexte(String valeur, String champ) {
-        if (valeur == null || valeur.isBlank()) {
-            throw new IllegalArgumentException("Le champ " + champ + " est obligatoire");
-        }
+    private Agence getAgence(Long idAgence) {
+        return agenceRepository.findById(idAgence)
+                .orElseThrow(() -> new ResourceNotFoundException("Agence", idAgence));
     }
 }

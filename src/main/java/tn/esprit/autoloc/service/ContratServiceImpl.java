@@ -5,43 +5,39 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import tn.esprit.autoloc.domain.Contrat;
 import tn.esprit.autoloc.exception.ResourceNotFoundException;
+import tn.esprit.autoloc.mapper.ContratMapper;
 import tn.esprit.autoloc.repository.IContratRepository;
+import tn.esprit.autoloc.web.dto.ContratRequestDTO;
+import tn.esprit.autoloc.web.dto.ContratResponseDTO;
 
 @Service
 @RequiredArgsConstructor
 public class ContratServiceImpl implements IContratService {
 
     private final IContratRepository contratRepository;
+    private final ContratMapper contratMapper;
 
     @Override
-    public Contrat create(Contrat contrat) {
-        if (contrat.getIdContrat() != null) {
-            throw new IllegalArgumentException("Un nouvel objet Contrat ne doit pas avoir d'identifiant");
-        }
-        valider(contrat);
-        return contratRepository.save(contrat);
+    public ContratResponseDTO create(ContratRequestDTO dto) {
+        Contrat contrat = contratMapper.toEntity(dto);
+        return contratMapper.toDto(contratRepository.save(contrat));
     }
 
     @Override
-    public Contrat findById(Long id) {
-        return contratRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Contrat", id));
+    public ContratResponseDTO findById(Long id) {
+        return contratMapper.toDto(getContrat(id));
     }
 
     @Override
-    public List<Contrat> findAll() {
-        return contratRepository.findAll();
+    public List<ContratResponseDTO> findAll() {
+        return contratRepository.findAll().stream().map(contratMapper::toDto).toList();
     }
 
     @Override
-    public Contrat update(Long id, Contrat contrat) {
-        Contrat existant = findById(id);
-        valider(contrat);
-        existant.setDateSignature(contrat.getDateSignature());
-        existant.setMontantTotal(contrat.getMontantTotal());
-        existant.setValide(contrat.isValide());
-        // ni l'identifiant ni la collection de paiements ne sont recopiés (orphanRemoval)
-        return contratRepository.save(existant);
+    public ContratResponseDTO update(Long id, ContratRequestDTO dto) {
+        Contrat existant = getContrat(id);
+        contratMapper.updateEntity(existant, dto);
+        return contratMapper.toDto(contratRepository.save(existant));
     }
 
     @Override
@@ -52,9 +48,8 @@ public class ContratServiceImpl implements IContratService {
         contratRepository.deleteById(id);
     }
 
-    private void valider(Contrat contrat) {
-        if (contrat.getMontantTotal() == null || contrat.getMontantTotal().signum() < 0) {
-            throw new IllegalArgumentException("Le montant total doit être positif ou nul");
-        }
+    private Contrat getContrat(Long id) {
+        return contratRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Contrat", id));
     }
 }

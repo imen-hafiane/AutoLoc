@@ -1,6 +1,5 @@
 package tn.esprit.autoloc.domain;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -58,7 +57,6 @@ public class Vehicule {
     @ManyToMany
     private Set<Equipement> equipements;
 
-    @JsonIgnore
     @OneToMany(mappedBy = "vehicule")
     private Set<Reservation> reservations;
 }

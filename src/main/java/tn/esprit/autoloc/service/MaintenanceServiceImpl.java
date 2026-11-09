@@ -5,48 +5,45 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import tn.esprit.autoloc.domain.Maintenance;
 import tn.esprit.autoloc.exception.ResourceNotFoundException;
+import tn.esprit.autoloc.mapper.MaintenanceMapper;
 import tn.esprit.autoloc.repository.IMaintenanceRepository;
 import tn.esprit.autoloc.repository.IVehiculeRepository;
+import tn.esprit.autoloc.web.dto.MaintenanceRequestDTO;
+import tn.esprit.autoloc.web.dto.MaintenanceResponseDTO;
 
 @Service
 @RequiredArgsConstructor
 public class MaintenanceServiceImpl implements IMaintenanceService {
-    private final IVehiculeRepository vehiculeRepository;
+
     private final IMaintenanceRepository maintenanceRepository;
+    private final IVehiculeRepository vehiculeRepository;
+    private final MaintenanceMapper maintenanceMapper;
 
     @Override
-    public Maintenance create(Maintenance maintenance) {
-        if (maintenance.getIdMaintenance() != null) {
-            throw new IllegalArgumentException("Un nouvel objet Maintenance ne doit pas avoir d'identifiant");
-        }
-        valider(maintenance);
-        if (maintenance.getVehicule() != null) {
-            Long idVehicule = maintenance.getVehicule().getIdVehicule();
-            maintenance.setVehicule(vehiculeRepository.findById(idVehicule)
-                    .orElseThrow(() -> new ResourceNotFoundException("Vehicule", idVehicule)));
-        }
-        return maintenanceRepository.save(maintenance);
+    public MaintenanceResponseDTO create(MaintenanceRequestDTO dto) {
+        verifierDates(dto);
+        Maintenance maintenance = maintenanceMapper.toEntity(dto);
+        rattacher(maintenance, dto);
+        return maintenanceMapper.toDto(maintenanceRepository.save(maintenance));
     }
 
     @Override
-    public Maintenance findById(Long id) {
-        return maintenanceRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Maintenance", id));
+    public MaintenanceResponseDTO findById(Long id) {
+        return maintenanceMapper.toDto(getMaintenance(id));
     }
 
     @Override
-    public List<Maintenance> findAll() {
-        return maintenanceRepository.findAll();
+    public List<MaintenanceResponseDTO> findAll() {
+        return maintenanceRepository.findAll().stream().map(maintenanceMapper::toDto).toList();
     }
 
     @Override
-    public Maintenance update(Long id, Maintenance maintenance) {
-        Maintenance existant = findById(id);
-        valider(maintenance);
-        existant.setDateDebut(maintenance.getDateDebut());
-        existant.setDateFin(maintenance.getDateFin());
-        existant.setDescription(maintenance.getDescription());
-        return maintenanceRepository.save(existant);
+    public MaintenanceResponseDTO update(Long id, MaintenanceRequestDTO dto) {
+        verifierDates(dto);
+        Maintenance existant = getMaintenance(id);
+        maintenanceMapper.updateEntity(existant, dto);
+        rattacher(existant, dto);
+        return maintenanceMapper.toDto(maintenanceRepository.save(existant));
     }
 
     @Override
@@ -57,12 +54,21 @@ public class MaintenanceServiceImpl implements IMaintenanceService {
         maintenanceRepository.deleteById(id);
     }
 
-    private void valider(Maintenance maintenance) {
-        if (maintenance.getDateDebut() == null) {
-            throw new IllegalArgumentException("La date de début est obligatoire");
-        }
-        if (maintenance.getDateFin() != null && maintenance.getDateFin().isBefore(maintenance.getDateDebut())) {
+    private Maintenance getMaintenance(Long id) {
+        return maintenanceRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Maintenance", id));
+    }
+
+    private void verifierDates(MaintenanceRequestDTO dto) {
+        if (dto.getDateFin() != null && dto.getDateFin().isBefore(dto.getDateDebut())) {
             throw new IllegalArgumentException("La date de fin ne peut pas précéder la date de début");
         }
+    }
+
+    // charge le vrai véhicule : évite la re-création du véhicule par cascade PERSIST
+    private void rattacher(Maintenance maintenance, MaintenanceRequestDTO dto) {
+        Long idVehicule = dto.getIdVehicule();
+        maintenance.setVehicule(vehiculeRepository.findById(idVehicule)
+                .orElseThrow(() -> new ResourceNotFoundException("Vehicule", idVehicule)));
     }
 }
