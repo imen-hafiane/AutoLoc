@@ -16,11 +16,12 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import tn.esprit.autoloc.service.IVehiculeService;
+import tn.esprit.autoloc.web.dto.VehiculeDTO;
 import tn.esprit.autoloc.web.dto.VehiculeRequestDTO;
-import tn.esprit.autoloc.web.dto.VehiculeResponseDTO;
 
 @Tag(name = "Véhicules", description = "Gestion de la flotte de véhicules")
 @RestController
@@ -33,7 +34,7 @@ public class VehiculeController {
     @Operation(summary = "Lister les véhicules")
     @ApiResponse(responseCode = "200", description = "Liste renvoyée")
     @GetMapping
-    public List<VehiculeResponseDTO> findAll() {
+    public List<VehiculeDTO> findAll() {
         return vehiculeService.findAll();
     }
 
@@ -43,7 +44,7 @@ public class VehiculeController {
             @ApiResponse(responseCode = "404", description = "Véhicule introuvable")
     })
     @GetMapping("/{id}")
-    public VehiculeResponseDTO findById(@Parameter(description = "Identifiant") @PathVariable Long id) {
+    public VehiculeDTO findById(@Parameter(description = "Identifiant") @PathVariable Long id) {
         return vehiculeService.findById(id);
     }
 
@@ -54,7 +55,7 @@ public class VehiculeController {
     })
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public VehiculeResponseDTO create(@Valid @RequestBody VehiculeRequestDTO dto) {
+    public VehiculeDTO create(@Valid @RequestBody VehiculeRequestDTO dto) {
         return vehiculeService.create(dto);
     }
 
@@ -65,7 +66,7 @@ public class VehiculeController {
             @ApiResponse(responseCode = "404", description = "Véhicule introuvable")
     })
     @PutMapping("/{id}")
-    public VehiculeResponseDTO update(@Parameter(description = "Identifiant") @PathVariable Long id,
+    public VehiculeDTO update(@Parameter(description = "Identifiant") @PathVariable Long id,
                                  @Valid @RequestBody VehiculeRequestDTO dto) {
         return vehiculeService.update(id, dto);
     }
@@ -80,5 +81,29 @@ public class VehiculeController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteById(@Parameter(description = "Identifiant") @PathVariable Long id) {
         vehiculeService.deleteById(id);
+    }
+
+    // ================= Atelier 7 : affectations =================
+
+    @Operation(summary = "Affecter un équipement à un véhicule")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Équipement affecté au véhicule"),
+            @ApiResponse(responseCode = "404", description = "Véhicule ou équipement introuvable")
+    })
+    @PutMapping("/{idVehicule}/affecter-equipement/{idEquipement}")
+    public VehiculeDTO affecterVehiculeAEquipement(@PathVariable Long idVehicule,
+                                                   @PathVariable Long idEquipement) {
+        return vehiculeService.affecterVehiculeAEquipement(idVehicule, idEquipement);
+    }
+
+    @Operation(summary = "Créer une maintenance et l'affecter à un véhicule (recherché par immatriculation)")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Maintenance affectée, véhicule passé en MAINTENANCE"),
+            @ApiResponse(responseCode = "404", description = "Véhicule introuvable")
+    })
+    @PutMapping("/{immatriculation}/affecter-maintenance")
+    public VehiculeDTO affecterMaintenanceAvehicule(@RequestParam String description,
+                                                    @PathVariable String immatriculation) {
+        return vehiculeService.affecterMaintenanceAvehicule(description, immatriculation);
     }
 }

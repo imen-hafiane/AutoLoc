@@ -6,8 +6,10 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import java.time.LocalDate;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -16,11 +18,12 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import tn.esprit.autoloc.service.IContratService;
+import tn.esprit.autoloc.web.dto.ContratDTO;
 import tn.esprit.autoloc.web.dto.ContratRequestDTO;
-import tn.esprit.autoloc.web.dto.ContratResponseDTO;
 
 @Tag(name = "Contrats", description = "Gestion des contrats de location")
 @RestController
@@ -33,7 +36,7 @@ public class ContratController {
     @Operation(summary = "Lister les contrats")
     @ApiResponse(responseCode = "200", description = "Liste renvoyée")
     @GetMapping
-    public List<ContratResponseDTO> findAll() {
+    public List<ContratDTO> findAll() {
         return contratService.findAll();
     }
 
@@ -43,7 +46,7 @@ public class ContratController {
             @ApiResponse(responseCode = "404", description = "Contrat introuvable")
     })
     @GetMapping("/{id}")
-    public ContratResponseDTO findById(@Parameter(description = "Identifiant") @PathVariable Long id) {
+    public ContratDTO findById(@Parameter(description = "Identifiant") @PathVariable Long id) {
         return contratService.findById(id);
     }
 
@@ -54,7 +57,7 @@ public class ContratController {
     })
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public ContratResponseDTO create(@Valid @RequestBody ContratRequestDTO dto) {
+    public ContratDTO create(@Valid @RequestBody ContratRequestDTO dto) {
         return contratService.create(dto);
     }
 
@@ -65,7 +68,7 @@ public class ContratController {
             @ApiResponse(responseCode = "404", description = "Contrat introuvable")
     })
     @PutMapping("/{id}")
-    public ContratResponseDTO update(@Parameter(description = "Identifiant") @PathVariable Long id,
+    public ContratDTO update(@Parameter(description = "Identifiant") @PathVariable Long id,
                                  @Valid @RequestBody ContratRequestDTO dto) {
         return contratService.update(id, dto);
     }
@@ -80,5 +83,20 @@ public class ContratController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteById(@Parameter(description = "Identifiant") @PathVariable Long id) {
         contratService.deleteById(id);
+    }
+
+    // ================= Atelier 7 : affectation =================
+
+    @Operation(summary = "Affecter un contrat (date de signature) à une réservation (dates de début et de fin)")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Contrat affecté à la réservation"),
+            @ApiResponse(responseCode = "404", description = "Aucun contrat libre ou aucune réservation sans contrat")
+    })
+    @PutMapping("/affecter-reservation")
+    public ContratDTO affecterContratAReservation(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateSignature,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateDebut,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateFin) {
+        return contratService.affecterContratAReservation(dateSignature, dateDebut, dateFin);
     }
 }

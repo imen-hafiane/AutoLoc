@@ -1,18 +1,22 @@
 package tn.esprit.autoloc.service;
 
+import java.time.LocalDate;
 import java.util.List;
+import tn.esprit.autoloc.web.dto.ContratDTO;
 import tn.esprit.autoloc.web.dto.ContratRequestDTO;
-import tn.esprit.autoloc.web.dto.ContratResponseDTO;
 
 public interface IContratService {
 
-    ContratResponseDTO create(ContratRequestDTO dto);
+    ContratDTO create(ContratRequestDTO dto);
 
-    ContratResponseDTO findById(Long id);
+    ContratDTO findById(Long id);
 
-    List<ContratResponseDTO> findAll();
+    List<ContratDTO> findAll();
 
-    ContratResponseDTO update(Long id, ContratRequestDTO dto);
+    ContratDTO update(Long id, ContratRequestDTO dto);
 
     void deleteById(Long id);
+
+    // ---- Atelier 7 : affectation
+    ContratDTO affecterContratAReservation(LocalDate dateSignature, LocalDate dateDebut, LocalDate dateFin);
 }

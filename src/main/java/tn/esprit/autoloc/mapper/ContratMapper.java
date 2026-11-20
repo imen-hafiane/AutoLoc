@@ -8,7 +8,7 @@ import org.springframework.stereotype.Component;
 import tn.esprit.autoloc.domain.Contrat;
 import tn.esprit.autoloc.domain.Paiement;
 import tn.esprit.autoloc.web.dto.ContratRequestDTO;
-import tn.esprit.autoloc.web.dto.ContratResponseDTO;
+import tn.esprit.autoloc.web.dto.ContratDTO;
 
 @Component
 @RequiredArgsConstructor
@@ -16,12 +16,15 @@ public class ContratMapper {
 
     private final PaiementMapper paiementMapper;
 
-    public ContratResponseDTO toDto(Contrat contrat) {
-        ContratResponseDTO dto = new ContratResponseDTO();
+    public ContratDTO toDto(Contrat contrat) {
+        ContratDTO dto = new ContratDTO();
         dto.setIdContrat(contrat.getIdContrat());
         dto.setDateSignature(contrat.getDateSignature());
         dto.setMontantTotal(contrat.getMontantTotal());
         dto.setValide(contrat.isValide());
+        if (contrat.getReservation() != null) {
+            dto.setIdReservation(contrat.getReservation().getIdReservation());
+        }
         dto.setPaiements(contrat.getPaiements() == null ? List.of()
                 : contrat.getPaiements().stream().map(paiementMapper::toDto).toList());
         return dto;

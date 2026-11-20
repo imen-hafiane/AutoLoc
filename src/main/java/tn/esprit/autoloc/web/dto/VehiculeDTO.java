@@ -13,7 +13,7 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class VehiculeResponseDTO {
+public class VehiculeDTO {
 
     private Long idVehicule;
 

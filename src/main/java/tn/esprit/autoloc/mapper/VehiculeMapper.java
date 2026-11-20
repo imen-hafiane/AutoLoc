@@ -5,13 +5,13 @@ import org.springframework.stereotype.Component;
 import tn.esprit.autoloc.domain.Equipement;
 import tn.esprit.autoloc.domain.Vehicule;
 import tn.esprit.autoloc.web.dto.VehiculeRequestDTO;
-import tn.esprit.autoloc.web.dto.VehiculeResponseDTO;
+import tn.esprit.autoloc.web.dto.VehiculeDTO;
 
 @Component
 public class VehiculeMapper {
 
-    public VehiculeResponseDTO toDto(Vehicule vehicule) {
-        VehiculeResponseDTO dto = new VehiculeResponseDTO();
+    public VehiculeDTO toDto(Vehicule vehicule) {
+        VehiculeDTO dto = new VehiculeDTO();
         dto.setIdVehicule(vehicule.getIdVehicule());
         dto.setImmatriculation(vehicule.getImmatriculation());
         dto.setMarque(vehicule.getMarque());

@@ -12,7 +12,7 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class ContratResponseDTO {
+public class ContratDTO {
 
     private Long idContrat;
 
@@ -21,6 +21,8 @@ public class ContratResponseDTO {
     private BigDecimal montantTotal;
 
     private boolean valide;
+
+    private Long idReservation;
 
     private List<PaiementResponseDTO> paiements;
 }

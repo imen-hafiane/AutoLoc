@@ -5,6 +5,7 @@ import tn.esprit.autoloc.domain.Reservation;
 import tn.esprit.autoloc.domain.StatutReservation;
 import tn.esprit.autoloc.web.dto.ReservationRequestDTO;
 import tn.esprit.autoloc.web.dto.ReservationResponseDTO;
+import tn.esprit.autoloc.web.dto.ReservationWithContratRequestDTO;
 
 @Component
 public class ReservationMapper {
@@ -45,5 +46,14 @@ public class ReservationMapper {
         if (dto.getStatut() != null) {
             reservation.setStatut(dto.getStatut());
         }
+    }
+
+    // partie "réservation" du DTO combiné ; le contrat est construit par le service
+    public Reservation toEntity(ReservationWithContratRequestDTO dto) {
+        Reservation reservation = new Reservation();
+        reservation.setDateDebut(dto.getDateDebut());
+        reservation.setDateFin(dto.getDateFin());
+        reservation.setStatut(dto.getStatut() != null ? dto.getStatut() : StatutReservation.CONFIRMEE);
+        return reservation;
     }
 }

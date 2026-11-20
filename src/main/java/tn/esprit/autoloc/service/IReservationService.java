@@ -3,6 +3,7 @@ package tn.esprit.autoloc.service;
 import java.util.List;
 import tn.esprit.autoloc.web.dto.ReservationRequestDTO;
 import tn.esprit.autoloc.web.dto.ReservationResponseDTO;
+import tn.esprit.autoloc.web.dto.ReservationWithContratRequestDTO;
 
 public interface IReservationService {
 
@@ -15,4 +16,9 @@ public interface IReservationService {
     ReservationResponseDTO update(Long id, ReservationRequestDTO dto);
 
     void deleteById(Long id);
+
+    // ---- Atelier 7 : affectations
+    ReservationResponseDTO affecterReservationAClient(Long idReservation, String nom, String prenom);
+
+    ReservationResponseDTO creerReservationEtContratAssocie(ReservationWithContratRequestDTO requestDTO);
 }
